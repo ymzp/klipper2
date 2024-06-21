@@ -5,7 +5,7 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import math, logging
 import stepper, chelper
-
+import usedNum
 class ExtruderStepper:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -266,7 +266,11 @@ class PrinterExtruder:
             extruder = self.printer.lookup_object('toolhead').get_extruder()
         pheaters = self.printer.lookup_object('heaters')
         pheaters.set_temperature(extruder.get_heater(), temp, wait)
+    #modified_position
+    
     def cmd_M109(self, gcmd):
+        #modified_position
+        usedNum.needExtruder=1
         # Set Extruder Temperature and Wait
         self.cmd_M104(gcmd, wait=True)
     cmd_ACTIVATE_EXTRUDER_help = "Change the active extruder"

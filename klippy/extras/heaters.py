@@ -4,7 +4,7 @@
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import os, logging, threading
-
+import usedNum
 
 ######################################################################
 # Heater
@@ -344,6 +344,24 @@ class PrinterHeaters:
             print_time = toolhead.get_last_move_time()
             gcode.respond_raw(self._get_temp(eventtime))
             eventtime = reactor.pause(eventtime + 1.)
+            #modified_position
+            
+            if usedNum.needExtruder==1:
+                gcode.respond_info(self._get_temp(eventtime))
+                rawTemp=str(self._get_temp(eventtime))
+                gcode.respond_info(((rawTemp.split(':')[2]).split('/')[0]).strip())
+                gcode.respond_info(((rawTemp.split(':')[2]).split('/')[1]).strip())
+                if abs(float(((rawTemp.split(':')[2]).split('/')[0]).strip())-float(((rawTemp.split(':')[2]).split('/')[1]).strip()))<=3:
+                    usedNum.needExtruder=0
+                    break
+            if usedNum.needBed==1:
+                gcode.respond_info(self._get_temp(eventtime))
+                rawTemp=str(self._get_temp(eventtime))
+                gcode.respond_info(((rawTemp.split(':')[1]).split('/')[0]).strip())
+                gcode.respond_info(((rawTemp.split('/')[1]).split('T')[0]).strip())
+                if abs(float(((rawTemp.split(':')[1]).split('/')[0]).strip())-float(((rawTemp.split('/')[1]).split('T')[0]).strip()))<=3:
+                    usedNum.needBed=0
+                    break
     def set_temperature(self, heater, temp, wait=False):
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_lookahead_callback((lambda pt: None))
