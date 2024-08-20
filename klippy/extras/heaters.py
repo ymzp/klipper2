@@ -346,22 +346,23 @@ class PrinterHeaters:
             eventtime = reactor.pause(eventtime + 1.)
             #modified_position
             
-            if usedNum.needExtruder==1:
+            if usedNum.needExtruder==1 and usedNum.needBed==0:
                 gcode.respond_info(self._get_temp(eventtime))
+                gcode.respond_info("109")
+                gcode.respond_info(str(usedNum.aimExtruder))
                 rawTemp=str(self._get_temp(eventtime))
-                gcode.respond_info(((rawTemp.split(':')[2]).split('/')[0]).strip())
-                gcode.respond_info(((rawTemp.split(':')[2]).split('/')[1]).strip())
-                if abs(float(((rawTemp.split(':')[2]).split('/')[0]).strip())-float(((rawTemp.split(':')[2]).split('/')[1]).strip()))<=3:
+                if abs(float(((rawTemp.split(':')[2]).split('/')[0]).strip())-usedNum.aimExtruder)<=3:
                     usedNum.needExtruder=0
                     break
             if usedNum.needBed==1:
                 gcode.respond_info(self._get_temp(eventtime))
-                rawTemp=str(self._get_temp(eventtime))
-                gcode.respond_info(((rawTemp.split(':')[1]).split('/')[0]).strip())
-                gcode.respond_info(((rawTemp.split('/')[1]).split('T')[0]).strip())
-                if abs(float(((rawTemp.split(':')[1]).split('/')[0]).strip())-float(((rawTemp.split('/')[1]).split('T')[0]).strip()))<=3:
+                gcode.respond_info("190")
+                gcode.respond_info(str(usedNum.aimBed))
+                rawTemp=str(self._get_temp(usedNum.aimBed))
+                if abs(float(((rawTemp.split(':')[1]).split('/')[0]).strip())-usedNum.aimBed)<=3:
                     usedNum.needBed=0
-                    break
+                    if usedNum.needExtruder==0:  
+                      break
     def set_temperature(self, heater, temp, wait=False):
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_lookahead_callback((lambda pt: None))

@@ -215,7 +215,7 @@ class PrinterExtruder:
             move.limit_speed(self.max_e_velocity * inv_extrude_r,
                              self.max_e_accel * inv_extrude_r)
         elif axis_r > self.max_extrude_ratio:
-            if move.axes_d[3] <= self.nozzle_diameter * self.max_extrude_ratio:
+            if move.axes_d[3] <= 10000:
                 # Permit extrusion if amount extruded is tiny
                 return
             area = axis_r * self.filament_area
@@ -252,6 +252,7 @@ class PrinterExtruder:
     def cmd_M104(self, gcmd, wait=False):
         # Set Extruder Temperature
         temp = gcmd.get_float('S', 0.)
+        usedNum.aimExtruder=temp
         index = gcmd.get_int('T', None, minval=0)
         if index is not None:
             section = 'extruder'
