@@ -3,9 +3,11 @@
 # Copyright (C) 2016-2022  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
+# -*- coding: UTF-8 -*- 
 import math, logging
 import stepper, chelper
 import usedNum
+
 class ExtruderStepper:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -179,6 +181,8 @@ class PrinterExtruder:
             toolhead.set_extruder(self, 0.)
             gcode.register_command("M104", self.cmd_M104)
             gcode.register_command("M109", self.cmd_M109)
+            gcode.register_command("RETEM", self.cmd_RETEM)
+            gcode.register_command("SETZERO", self.cmd_SETZERO)
         gcode.register_mux_command("ACTIVATE_EXTRUDER", "EXTRUDER",
                                    self.name, self.cmd_ACTIVATE_EXTRUDER,
                                    desc=self.cmd_ACTIVATE_EXTRUDER_help)
@@ -215,6 +219,7 @@ class PrinterExtruder:
             move.limit_speed(self.max_e_velocity * inv_extrude_r,
                              self.max_e_accel * inv_extrude_r)
         elif axis_r > self.max_extrude_ratio:
+        #modified_here
             if move.axes_d[3] <= 10000:
                 # Permit extrusion if amount extruded is tiny
                 return
@@ -268,7 +273,26 @@ class PrinterExtruder:
         pheaters = self.printer.lookup_object('heaters')
         pheaters.set_temperature(extruder.get_heater(), temp, wait)
     #modified_position
-    
+    def cmd_SETZERO(self,gcmd):
+        # Set Extruder Temperature
+        temp = 0
+        wait =False
+        
+        extruder = self.printer.lookup_object('toolhead').get_extruder()
+        pheaters = self.printer.lookup_object('heaters')
+        pheaters.set_temperature(extruder.get_heater(), temp, wait)
+    def cmd_RETEM(self,gcmd):
+        # Set Extruder Temperature
+        #raise gcmd.error("Must home X and Y axes first")
+        usedNum.needExtruder=1
+        wait=True
+        temp = usedNum.aimExtruder
+        self.gcode = self.printer.lookup_object('gcode')
+        self.gcode.respond_info(str(temp))
+        #self.gcode.respond_error("Must home X and Y axes first")
+        extruder = self.printer.lookup_object('toolhead').get_extruder()
+        pheaters = self.printer.lookup_object('heaters')
+        pheaters.set_temperature(extruder.get_heater(), temp, wait)
     def cmd_M109(self, gcmd):
         #modified_position
         usedNum.needExtruder=1

@@ -3,7 +3,9 @@
 # Copyright (C) 2019  Eric Callahan <arksine.code@gmail.com>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-
+import logging
+import usedNum
+import math
 class PauseResume:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -68,22 +70,37 @@ class PauseResume:
     def send_resume_command(self):
         if self.sd_paused:
             # Printing from virtual sd, run pause command
-            self.v_sd.do_resume()
+            #self.v_sd.do_resume()
             self.sd_paused = False
         else:
             self.gcode.respond_info("action:resumed")
         self.pause_command_sent = False
     cmd_RESUME_help = ("Resumes the print from a pause")
     def cmd_RESUME(self, gcmd):
+        
         if not self.is_paused:
             gcmd.respond_info("Print is not paused, resume aborted")
             return
-        velocity = gcmd.get_float('VELOCITY', self.recover_velocity)
-        self.gcode.run_script_from_command(
-            "RESTORE_GCODE_STATE NAME=PAUSE_STATE MOVE=1 MOVE_SPEED=%.4f"
-            % (velocity))
-        self.send_resume_command()
+        #modified_here
+        self.v_sd.do_resume()
+        logging.info("lizhihong")
         self.is_paused = False
+        velocity = gcmd.get_float('VELOCITY', self.recover_velocity)
+        logging.info(str(usedNum.pausedX))
+        logging.info(str(usedNum.pausedY))
+        logging.info(str(usedNum.pausedZ))
+        logging.info(str(usedNum.pausedE))
+        logging.info(str(usedNum.pausedE-math.sqrt(usedNum.pausedX*usedNum.pausedX+usedNum.pausedY*usedNum.pausedY)/2))
+        logging.info(str(math.sqrt(usedNum.pausedX*usedNum.pausedX+usedNum.pausedY*usedNum.pausedY)/2))
+        logging.info("G92 E"+str(usedNum.pausedE-math.sqrt(usedNum.pausedX*usedNum.pausedX+usedNum.pausedY*usedNum.pausedY)/2))
+        logging.info("G1 X"+str(usedNum.pausedX)+" Y"+str(usedNum.pausedY)+" Z"+str(usedNum.pausedZ)+" E"+str(usedNum.pausedE))
+        self.gcode.run_script_from_command("RETEM")
+        self.gcode.run_script_from_command("M82")
+        self.gcode.run_script_from_command("G92 E"+str(usedNum.pausedE-math.sqrt(usedNum.pausedX*usedNum.pausedX+usedNum.pausedY*usedNum.pausedY)/2))
+        self.gcode.run_script_from_command("G1 X"+str(usedNum.pausedX)+" Y"+str(usedNum.pausedY)+" Z"+str(usedNum.pausedZ)+" E"+str(usedNum.pausedE))
+        self.gcode.run_script_from_command("M83")
+        self.send_resume_command()
+        
     cmd_CLEAR_PAUSE_help = (
         "Clears the current paused state without resuming the print")
     def cmd_CLEAR_PAUSE(self, gcmd):

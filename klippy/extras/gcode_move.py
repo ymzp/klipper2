@@ -4,7 +4,7 @@
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import logging
-
+import usedNum
 class GCodeMove:
     def __init__(self, config):
         self.printer = printer = config.get_printer()
@@ -114,8 +114,18 @@ class GCodeMove:
         # Move
         params = gcmd.get_command_parameters()
         try:
+            #modified_here
+            if 'C' in params:
+                usedNum.pausedX=float(self.last_position[0])
+                usedNum.pausedY=float(self.last_position[1])
+                usedNum.pausedZ=float(self.last_position[2])
+                usedNum.pausedE=float(self.last_position[3])
+                
             for pos, axis in enumerate('XYZ'):
+                
                 if axis in params:
+                    
+                    
                     v = float(params[axis])
                     if not self.absolute_coord:
                         # value relative to position of last move
@@ -123,6 +133,7 @@ class GCodeMove:
                     else:
                         # value relative to base coordinate position
                         self.last_position[pos] = v + self.base_position[pos]
+                    
             if 'E' in params:
                 v = float(params['E']) * self.extrude_factor
                 if not self.absolute_coord or not self.absolute_extrude:
@@ -137,6 +148,7 @@ class GCodeMove:
                     raise gcmd.error("Invalid speed in '%s'"
                                      % (gcmd.get_commandline(),))
                 self.speed = gcode_speed * self.speed_factor
+            
         except ValueError as e:
             raise gcmd.error("Unable to parse move '%s'"
                              % (gcmd.get_commandline(),))
